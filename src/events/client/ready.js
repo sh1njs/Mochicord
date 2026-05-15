@@ -20,7 +20,7 @@ export async function execute(client) {
 		ensureGuildConfig(guildId);
 	}
 
-	client.user.setActivity(`${client.guilds.cache.size} server(s)`, {
+	client.user.setActivity(`/help | ${client.guilds.cache.size} server(s)`, {
 		type: ActivityType.Watching,
 	});
 

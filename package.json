@@ -19,6 +19,7 @@
 		"#structures/*": "./src/structures/*.js",
 		"#handlers/*": "./src/handlers/*.js",
 		"#services/*": "./src/services/*.js",
+		"#scrapers/*": "./src/services/scrapers/*.js",
 		"#utils/*": "./src/utils/*.js",
 		"#database/*": "./src/database/*.js"
 	},

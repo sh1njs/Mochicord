@@ -31,6 +31,7 @@ class HelpCommand extends Command {
 
 		const ICONS = {
 			moderation: "🔨",
+			download: "📤",
 			utility: "🔧",
 			automod: "🛡️",
 			owner: "👑",
