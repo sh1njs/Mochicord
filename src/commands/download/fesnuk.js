@@ -11,7 +11,7 @@ import fesnuk from '#scrapers/facebook';
 class FacebookCommand extends Command {
 	constructor() {
 		super('facebook', 'Download Facebook videos or images from a URL.', {
-			category: 'download,
+			category: 'download',
 			usage: '/facebook <url>',
 		});
 
