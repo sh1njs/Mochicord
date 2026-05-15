@@ -61,6 +61,7 @@ class FacebookCommand extends Command {
 		if (result.comments && Array.isArray(result.comments) && result.comments.length > 0) {
 			description += '\n💬 **Top Comments:**\n';
 			const topComments = result.comments.slice(0, 3);
+
 			for (const comment of topComments) {
 				if (comment.text && comment.text.trim() !== '') {
 					description += `• **${comment.author.name}:** ${comment.text}\n`;
@@ -76,15 +77,33 @@ class FacebookCommand extends Command {
 			.setTimestamp();
 
 		if (result.type === 'image' && Array.isArray(result.image) && result.image.length > 0) {
-			embed.setImage(result.image[0]);
-			await interaction.editReply({ embeds: [embed] });
+			try {
+				const response = await fetch(result.image[0]);
+				const buffer = await response.arrayBuffer();
 
-			for (let i = 1; i < result.image.length; i++) {
-				const additionalEmbed = new EmbedBuilder()
-					.setColor(config.color.default)
-					.setImage(result.image[i]);
-				
-				await interaction.followUp({ embeds: [additionalEmbed] });
+				const attachment = new AttachmentBuilder(Buffer.from(buffer), {
+					name: 'facebook-image-1.jpg',
+				});
+
+				await interaction.editReply({
+					embeds: [embed],
+					files: [attachment],
+				});
+
+				for (let i = 1; i < result.image.length; i++) {
+					const res = await fetch(result.image[i]);
+					const buf = await res.arrayBuffer();
+
+					const file = new AttachmentBuilder(Buffer.from(buf), {
+						name: `facebook-image-${i + 1}.jpg`,
+					});
+
+					await interaction.followUp({ files: [file] });
+				}
+			} catch (err) {
+				return interaction.editReply({
+					embeds: [errorEmbed(`Failed to download images: ${err.message}`)],
+				});
 			}
 			return;
 		}
@@ -92,18 +111,35 @@ class FacebookCommand extends Command {
 		if (result.type === 'video' && (result.hd || result.sd)) {
 			const videoUrl = result.hd || result.sd;
 			const quality = result.hd ? 'HD' : 'SD';
-			
+
 			embed.addFields({ name: 'Quality', value: quality, inline: true });
-			embed.setDescription(description.trim());
 
 			try {
-				await interaction.editReply({
-					content: `**Download:** ${videoUrl}`,
-					embeds: [embed],
+				const response = await fetch(videoUrl);
+				const buffer = await response.arrayBuffer();
+				const size = buffer.byteLength;
+
+				const MAX_SIZE = 25 * 1024 * 1024;
+
+				if (size > MAX_SIZE) {
+					return interaction.editReply({
+						embeds: [embed],
+						content: `⚠️ Video is too large to upload (${(size / 1024 / 1024).toFixed(2)}MB).\n**Download:** ${videoUrl}`,
+					});
+				}
+
+				const attachment = new AttachmentBuilder(Buffer.from(buffer), {
+					name: 'facebook-video.mp4',
 				});
-			} catch {
+
 				await interaction.editReply({
 					embeds: [embed],
+					files: [attachment],
+				});
+			} catch (err) {
+				return interaction.editReply({
+					embeds: [embed],
+					content: `Failed to upload video. **Download:** ${videoUrl}`,
 				});
 			}
 			return;
