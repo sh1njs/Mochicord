@@ -1,0 +1,12 @@
+{
+	"badword": {
+		"enabled": false,
+		"words": []
+	},
+	"welcome": {
+		"enabled": false,
+		"channelId": null,
+		"message": "{user} just joined **{server}**! Welcome, you are member **#{membercount}**! 🎉"
+	},
+	"warnings": {}
+}
