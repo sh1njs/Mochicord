@@ -1,5 +1,7 @@
+import { EmbedBuilder } from 'discord.js';
 import { loadGuild, saveGuild } from "#database/schema";
 import { resolveWelcomeMessage } from "#utils/helpers";
+import { config } from "#config";
 
 /**
  * Sets the welcome channel for a guild.
@@ -28,7 +30,7 @@ export function setWelcomeMessage(guildId, message) {
 /**
  * Enables or disables the welcome system for a guild.
  *
- * @param {string}  guildId
+ * @param {string}	guildId
  * @param {boolean} enabled
  */
 export function setWelcomeEnabled(guildId, enabled) {
@@ -52,5 +54,16 @@ export async function sendWelcomeMessage(member) {
 	if (!channel) return;
 
 	const text = resolveWelcomeMessage(db.welcome.message, member);
-	await channel.send(text).catch(() => {});
+
+	const embed = new EmbedBuilder()
+		.setColor(config.color.default)
+		.setDescription(text)
+		.setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+		.setFooter({
+			text: member.guild.name,
+			iconURL: member.guild.iconURL({ dynamic: true }),
+		})
+		.setTimestamp();
+
+	await channel.send({ embeds: [embed] }).catch(() => {});
 }
