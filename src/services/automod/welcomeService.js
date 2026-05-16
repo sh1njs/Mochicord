@@ -1,69 +1,69 @@
-import { EmbedBuilder } from 'discord.js';
-import { loadGuild, saveGuild } from "#database/schema";
-import { resolveWelcomeMessage } from "#utils/helpers";
+import local from "#database/local";
 import { config } from "#config";
+import { resolveWelcomeMessage } from "#utils/helpers";
+import { EmbedBuilder } from "discord.js";
 
 /**
- * Sets the welcome channel for a guild.
+ * Sets the welcome channel for the server.
  *
  * @param {string} guildId
  * @param {string} channelId
  */
 export function setWelcomeChannel(guildId, channelId) {
-	const db = loadGuild(guildId);
-	db.welcome.channelId = channelId;
-	saveGuild(guildId, db);
+  const server = local.servers.set(guildId, {});
+  server.welcome.channelId = channelId;
+  local.save();
 }
 
 /**
- * Sets the custom welcome message template for a guild.
+ * Sets the welcome message template for the server.
  *
  * @param {string} guildId
  * @param {string} message - Raw template with placeholders.
  */
 export function setWelcomeMessage(guildId, message) {
-	const db = loadGuild(guildId);
-	db.welcome.message = message;
-	saveGuild(guildId, db);
+  const server = local.servers.set(guildId, {});
+  server.welcome.message = message;
+  local.save();
 }
 
 /**
- * Enables or disables the welcome system for a guild.
+ * Enable or disable the welcome system for the server.
  *
- * @param {string}	guildId
+ * @param {string} guildId
  * @param {boolean} enabled
  */
 export function setWelcomeEnabled(guildId, enabled) {
-	const db = loadGuild(guildId);
-	db.welcome.enabled = enabled;
-	saveGuild(guildId, db);
+  const server = local.servers.set(guildId, {});
+  server.welcome.enabled = enabled;
+  local.save();
 }
 
 /**
- * Sends the configured welcome message when a member joins.
+ * Sends a welcome message when a new member joins.
  * Does nothing if the system is disabled or the channel is not found.
  *
  * @param {import('discord.js').GuildMember} member
  * @returns {Promise<void>}
  */
 export async function sendWelcomeMessage(member) {
-	const db = loadGuild(member.guild.id);
-	if (!db.welcome.enabled || !db.welcome.channelId) return;
+  const server = local.servers.get(member.guild.id);
+  if (!server?.welcome?.enabled || !server.welcome.channelId) return;
 
-	const channel = member.guild.channels.cache.get(db.welcome.channelId);
-	if (!channel) return;
+  const channel = member.guild.channels.cache.get(server.welcome.channelId);
+  if (!channel) return;
 
-	const text = resolveWelcomeMessage(db.welcome.message, member);
+  const text = resolveWelcomeMessage(server.welcome.message, member);
 
-	const embed = new EmbedBuilder()
-		.setColor(config.color.default)
-		.setDescription(text)
-		.setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-		.setFooter({
-			text: member.guild.name,
-			iconURL: member.guild.iconURL({ dynamic: true }),
-		})
-		.setTimestamp();
+  const embed = new EmbedBuilder()
+    .setColor(config.color.default)
+    .setDescription(text)
+    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+    .setFooter({
+      text: member.guild.name,
+      iconURL: member.guild.iconURL({ dynamic: true }),
+    })
+    .setTimestamp();
 
-	await channel.send({ embeds: [embed] }).catch(() => {});
+  await channel.send({ embeds: [embed] }).catch(() => {});
 }

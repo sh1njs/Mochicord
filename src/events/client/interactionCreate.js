@@ -11,50 +11,41 @@ export const name = Events.InteractionCreate;
  * @param {import('discord.js').Interaction} interaction
  */
 export async function execute(interaction) {
-	// ── Slash commands ──────────────────────────────────────────────────────
-	if (interaction.isChatInputCommand()) {
-		const command = interaction.client.commands.get(
-			interaction.commandName
-		);
+  if (interaction.isChatInputCommand()) {
+    const command = interaction.client.commands.get(interaction.commandName);
 
-		if (!command) {
-			logger.warn(`Unknown command invoked: /${interaction.commandName}`);
-			return interaction.reply({
-				embeds: [
-					errorEmbed(
-						"That command does not exist or is not registered."
-					),
-				],
-				ephemeral: true,
-			});
-		}
+    if (!command) {
+      logger.warn(`Unknown command invoked: /${interaction.commandName}`);
+      return interaction.reply({
+        embeds: [
+          errorEmbed("That command does not exist or is not registered."),
+        ],
+        ephemeral: true,
+      });
+    }
 
-		try {
-			await command.execute(interaction);
-			logger.info(
-				`/${interaction.commandName} used by ${interaction.user.tag} in "${interaction.guild?.name ?? "DM"}"`
-			);
-		} catch (err) {
-			logger.error(
-				`Error in /${interaction.commandName}: ${err.message}`
-			);
+    try {
+      await command.execute(interaction);
+      logger.info(
+        `/${interaction.commandName} used by ${interaction.user.tag} in "${interaction.guild?.name ?? "DM"}"`,
+      );
+    } catch (err) {
+      logger.error(`Error in /${interaction.commandName}: ${err.message}`);
 
-			const payload = {
-				embeds: [
-					errorEmbed(
-						"Something went wrong while running this command."
-					),
-				],
-				ephemeral: true,
-			};
+      const payload = {
+        embeds: [
+          errorEmbed("Something went wrong while running this command."),
+        ],
+        ephemeral: true,
+      };
 
-			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp(payload).catch(() => {});
-			} else {
-				await interaction.reply(payload).catch(() => {});
-			}
-		}
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(payload).catch(() => {});
+      } else {
+        await interaction.reply(payload).catch(() => {});
+      }
+    }
 
-		return;
-	}
+    return;
+  }
 }

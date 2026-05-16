@@ -7,10 +7,10 @@ import "dotenv/config";
 // Validate required environment variables
 const REQUIRED_ENV = ["DISCORD_TOKEN", "CLIENT_ID"];
 for (const key of REQUIRED_ENV) {
-	if (!process.env[key]) {
-		logger.error(`Missing required environment variable: ${key}`);
-		process.exit(1);
-	}
+  if (!process.env[key]) {
+    logger.error(`Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
 }
 
 // Bootstrap
@@ -27,10 +27,10 @@ await client.login(process.env.DISCORD_TOKEN);
 
 // Global error guards
 process.on("unhandledRejection", (err) => {
-	logger.error(`Unhandled rejection: ${err}`);
+  logger.error(`Unhandled rejection: ${err}`);
 });
 
 process.on("uncaughtException", (err) => {
-	logger.error(`Uncaught exception: ${err.message}`);
-	process.exit(1);
+  logger.error(`Uncaught exception: ${err.message}`);
+  process.exit(1);
 });

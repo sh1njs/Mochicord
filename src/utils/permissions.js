@@ -10,23 +10,21 @@ import { PermissionFlagsBits } from "discord.js";
  * @returns {Promise<boolean>} `true` if all permissions are present.
  */
 export async function checkBotPermissions(interaction) {
-	const botMember = interaction.guild.members.me;
-	const channel = interaction.channel;
+  const botMember = interaction.guild.members.me;
+  const channel = interaction.channel;
 
-	for (const perm of config.requiredBotPermissions) {
-		if (!botMember.permissionsIn(channel).has(PermissionFlagsBits[perm])) {
-			await interaction.reply({
-				embeds: [
-					errorEmbed(
-						`I'm missing the **${perm}** permission in this channel.`
-					),
-				],
-				ephemeral: true,
-			});
-			return false;
-		}
-	}
-	return true;
+  for (const perm of config.requiredBotPermissions) {
+    if (!botMember.permissionsIn(channel).has(PermissionFlagsBits[perm])) {
+      await interaction.reply({
+        embeds: [
+          errorEmbed(`I'm missing the **${perm}** permission in this channel.`),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -37,5 +35,5 @@ export async function checkBotPermissions(interaction) {
  * @returns {boolean}
  */
 export function memberHasAny(member, ...perms) {
-	return perms.some((p) => member.permissions.has(p));
+  return perms.some((p) => member.permissions.has(p));
 }

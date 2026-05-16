@@ -20,66 +20,70 @@ export const name = Events.MessageCreate;
  * @param {import('discord.js').Message} message
  */
 export async function execute(message) {
-	// Ignore bots and DMs.
-	if (message.author.bot || !message.guild) return;
+  // Ignore bots and DMs.
+  if (message.author.bot || !message.guild) return;
 
-	// Moderators are exempt from automod.
-	if (message.member?.permissions.has(PermissionFlagsBits.ManageMessages))
-		return;
+  // Moderators are exempt from automod.
+  if (message.member?.permissions.has(PermissionFlagsBits.ManageMessages))
+    return;
 
-	const match = findBadWord(message.guildId, message.content);
-	if (!match) return;
+  const match = findBadWord(message.guildId, message.content);
+  if (!match) return;
 
-	// --- Delete the offending message ---
-	await message.delete().catch(() => {});
+  // --- Delete the offending message ---
+  await message.delete().catch(() => {});
 
-	// --- Track warning and DM the user ---
-	const warnCount = addWarning(message.guildId, message.author.id);
+  // --- Track warning and DM the user ---
+  const warnCount = addWarning(
+    message.guildId,
+    message.author.id,
+    message.author.username,
+  );
 
-	try {
-		await message.author.send(
-			`⚠️ Your message in **${message.guild.name}** was removed because it contained a blocked word.\n` +
-				`**Warning ${warnCount}/${config.automod.maxWarnings}.**\n` +
-				(warnCount >= config.automod.maxWarnings
-					? "You have reached the warning limit and may be temporarily banned."
-					: "Please follow the server rules.")
-		);
-	} catch {
-		// User has DMs disabled — log silently.
-		logger.debug(
-			`Could not DM warning to ${message.author.tag} — DMs likely closed.`
-		);
-	}
+  try {
+    await message.author.send(
+      `⚠️ Your message in **${message.guild.name}** was removed because it contained a blocked word.\n` +
+        `**Warning ${warnCount}/${config.automod.maxWarnings}.**\n` +
+        (warnCount >= config.automod.maxWarnings
+          ? "You have reached the warning limit and may be temporarily banned."
+          : "Please follow the server rules."),
+    );
+  } catch {
+    // User has DMs disabled — log silently.
+    logger.debug(
+      `Could not DM warning to ${message.author.tag} — DMs likely closed.`,
+    );
+  }
 
-	logger.info(
-		`Automod: deleted message by ${message.author.tag} in "${message.guild.name}" — matched word: "${match}"`
-	);
+  logger.info(
+    `Automod: deleted message by ${message.author.tag} in "${message.guild.name}" — matched word: "${match}"`,
+  );
 
-	// --- Temp ban if threshold reached ---
-	if (warnCount >= config.automod.maxWarnings) {
-		try {
-			await message.guild.members.ban(message.author, {
-				reason: `Automod: ${warnCount} warnings for using blocked words.`,
-				deleteMessageSeconds: 0,
-			});
+  // --- Temp ban if threshold reached ---
+  if (warnCount >= config.automod.maxWarnings) {
+    try {
+      await message.guild.members.ban(message.author, {
+        reason: `Automod: ${warnCount} warnings for using blocked words.`,
+        deleteMessageSeconds: 0,
+      });
 
-			// Schedule unban.
-			setTimeout(async () => {
-				await message.guild.members
-					.unban(message.author.id, "Temporary automod ban expired.")
-					.catch(() => {});
-				logger.info(
-					`Automod: auto-unbanned ${message.author.tag} in "${message.guild.name}"`
-				);
-			}, config.automod.tempBanDuration);
+      // Schedule unban.
+      setTimeout(async () => {
+        await message.guild.members
+          .unban(message.author.id, "Temporary automod ban expired.")
+          .catch(() => {});
+        logger.info(
+          `Automod: auto-unbanned ${message.author.tag} in "${message.guild.name}"`,
+        );
+      }, config.automod.tempBanDuration);
 
-			logger.info(
-				`Automod: temp-banned ${message.author.tag} in "${message.guild.name}" for ${config.automod.maxWarnings} warnings.`
-			);
-		} catch (err) {
-			logger.error(
-				`Automod temp-ban failed for ${message.author.tag}: ${err.message}`
-			);
-		}
-	}
+      logger.info(
+        `Automod: temp-banned ${message.author.tag} in "${message.guild.name}" for ${config.automod.maxWarnings} warnings.`,
+      );
+    } catch (err) {
+      logger.error(
+        `Automod temp-ban failed for ${message.author.tag}: ${err.message}`,
+      );
+    }
+  }
 }

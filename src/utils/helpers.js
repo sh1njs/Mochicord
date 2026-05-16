@@ -9,14 +9,14 @@
  * @returns {string[]}
  */
 export function parseCommaSeparated(input) {
-	return [
-		...new Set(
-			input
-				.split(",")
-				.map((w) => w.trim().toLowerCase())
-				.filter(Boolean)
-		),
-	];
+  return [
+    ...new Set(
+      input
+        .split(",")
+        .map((w) => w.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 /**
@@ -27,10 +27,10 @@ export function parseCommaSeparated(input) {
  * @returns {string}
  */
 export function resolveWelcomeMessage(template, member) {
-	return template
-		.replace(/{user}/gi, `<@${member.id}>`)
-		.replace(/{server}/gi, member.guild.name)
-		.replace(/{membercount}/gi, String(member.guild.memberCount));
+  return template
+    .replace(/{user}/gi, `<@${member.id}>`)
+    .replace(/{server}/gi, member.guild.name)
+    .replace(/{membercount}/gi, String(member.guild.memberCount));
 }
 
 /**
@@ -41,7 +41,7 @@ export function resolveWelcomeMessage(template, member) {
  * @returns {string}
  */
 export function discordTimestamp(ms, style = "R") {
-	return `<t:${Math.floor(ms / 1000)}:${style}>`;
+  return `<t:${Math.floor(ms / 1000)}:${style}>`;
 }
 
 /**
@@ -52,5 +52,5 @@ export function discordTimestamp(ms, style = "R") {
  * @returns {string}
  */
 export function truncate(str, maxLength) {
-	return str.length <= maxLength ? str : `${str.slice(0, maxLength - 1)}…`;
+  return str.length <= maxLength ? str : `${str.slice(0, maxLength - 1)}…`;
 }

@@ -12,6 +12,6 @@ export const name = Events.GuildMemberAdd;
  * @param {import('discord.js').GuildMember} member
  */
 export async function execute(member) {
-	await sendWelcomeMessage(member);
-	logger.info(`New member joined "${member.guild.name}": ${member.user.tag}`);
+  await sendWelcomeMessage(member);
+  logger.info(`New member joined "${member.guild.name}": ${member.user.tag}`);
 }

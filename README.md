@@ -158,34 +158,34 @@ npm run dev
 
 1. Create a file in the appropriate category folder:
 
-    ```
-    src/commands/utility/mycommand.js
-    ```
+   ```
+   src/commands/utility/mycommand.js
+   ```
 
 2. Use the `Command` base class:
 
-    ```js
-    import { Command } from "#structures/Command";
-    import { successEmbed } from "#utils/embeds";
+   ```js
+   import { Command } from "#structures/Command";
+   import { successEmbed } from "#utils/embeds";
 
-    class MyCommand extends Command {
-    	constructor() {
-    		super("mycommand", "Does something cool.", {
-    			category: "utility",
-    			usage: "/mycommand",
-    		});
-    	}
+   class MyCommand extends Command {
+     constructor() {
+       super("mycommand", "Does something cool.", {
+         category: "utility",
+         usage: "/mycommand",
+       });
+     }
 
-    	async run(interaction) {
-    		await interaction.reply({ embeds: [successEmbed("It works!")] });
-    	}
-    }
+     async run(interaction) {
+       await interaction.reply({ embeds: [successEmbed("It works!")] });
+     }
+   }
 
-    const cmd = new MyCommand();
-    export const data = cmd.data;
-    export const execute = (i) => cmd.execute(i);
-    export const meta = cmd.meta;
-    ```
+   const cmd = new MyCommand();
+   export const data = cmd.data;
+   export const execute = (i) => cmd.execute(i);
+   export const meta = cmd.meta;
+   ```
 
 3. Redeploy with `npm run deploy`. The handler picks it up automatically.
 
@@ -195,21 +195,21 @@ npm run dev
 
 1. Create a file in the appropriate subfolder:
 
-    ```
-    src/events/guild/myevent.js
-    ```
+   ```
+   src/events/guild/myevent.js
+   ```
 
 2. Export `name`, `execute`, and optionally `once`:
 
-    ```js
-    import { Events } from "discord.js";
+   ```js
+   import { Events } from "discord.js";
 
-    export const name = Events.GuildDelete;
+   export const name = Events.GuildDelete;
 
-    export async function execute(guild) {
-    	console.log(`Left guild: ${guild.name}`);
-    }
-    ```
+   export async function execute(guild) {
+     console.log(`Left guild: ${guild.name}`);
+   }
+   ```
 
 No registration needed — the event handler discovers it automatically.
 
@@ -224,16 +224,16 @@ Files are auto-created on first bot interaction using the default schema in `sch
 
 ```json
 {
-	"badword": {
-		"enabled": false,
-		"words": []
-	},
-	"welcome": {
-		"enabled": false,
-		"channelId": null,
-		"message": "{user} just joined **{server}**! Welcome! 🎉"
-	},
-	"warnings": {}
+  "badword": {
+    "enabled": false,
+    "words": []
+  },
+  "welcome": {
+    "enabled": false,
+    "channelId": null,
+    "message": "{user} just joined **{server}**! Welcome! 🎉"
+  },
+  "warnings": {}
 }
 ```
 
@@ -255,5 +255,5 @@ All tuneable values are in `src/config/config.js`:
 - Node.js **18+** (for top-level `await`)
 - discord.js **v14**
 - A Discord bot application with the following intents enabled in the developer portal:
-    - **Server Members Intent**
-    - **Message Content Intent**
+  - **Server Members Intent**
+  - **Message Content Intent**

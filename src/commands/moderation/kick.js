@@ -7,58 +7,58 @@ import { PermissionFlagsBits } from "discord.js";
  * Requires the invoker to have the KickMembers permission.
  */
 class KickCommand extends Command {
-	constructor() {
-		super("kick", "Kick a member from the server.", {
-			category: "moderation",
-			usage: "/kick <target> [reason]",
-		});
+  constructor() {
+    super("kick", "Kick a member from the server.", {
+      category: "moderation",
+      usage: "/kick <target> [reason]",
+    });
 
-		this.data
-			.addUserOption((opt) =>
-				opt
-					.setName("target")
-					.setDescription("The member to kick.")
-					.setRequired(true)
-			)
-			.addStringOption((opt) =>
-				opt.setName("reason").setDescription("Reason for the kick.")
-			)
-			.setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
-	}
+    this.data
+      .addUserOption((opt) =>
+        opt
+          .setName("target")
+          .setDescription("The member to kick.")
+          .setRequired(true),
+      )
+      .addStringOption((opt) =>
+        opt.setName("reason").setDescription("Reason for the kick."),
+      )
+      .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
+  }
 
-	/** @param {import('discord.js').ChatInputCommandInteraction} interaction */
-	async run(interaction) {
-		const target = interaction.options.getMember("target");
-		const reason =
-			interaction.options.getString("reason") ?? "No reason provided.";
+  /** @param {import('discord.js').ChatInputCommandInteraction} interaction */
+  async run(interaction) {
+    const target = interaction.options.getMember("target");
+    const reason =
+      interaction.options.getString("reason") ?? "No reason provided.";
 
-		if (!target) {
-			return interaction.reply({
-				embeds: [errorEmbed("That member is not in this server.")],
-				ephemeral: true,
-			});
-		}
+    if (!target) {
+      return interaction.reply({
+        embeds: [errorEmbed("That member is not in this server.")],
+        ephemeral: true,
+      });
+    }
 
-		if (!target.kickable) {
-			return interaction.reply({
-				embeds: [
-					errorEmbed(
-						"I can't kick this member. They may have a higher role than me."
-					),
-				],
-				ephemeral: true,
-			});
-		}
+    if (!target.kickable) {
+      return interaction.reply({
+        embeds: [
+          errorEmbed(
+            "I can't kick this member. They may have a higher role than me.",
+          ),
+        ],
+        ephemeral: true,
+      });
+    }
 
-		await target.kick(reason);
-		await interaction.reply({
-			embeds: [
-				successEmbed(
-					`**${target.user.username}** has been kicked.\n**Reason:** ${reason}`
-				),
-			],
-		});
-	}
+    await target.kick(reason);
+    await interaction.reply({
+      embeds: [
+        successEmbed(
+          `**${target.user.username}** has been kicked.\n**Reason:** ${reason}`,
+        ),
+      ],
+    });
+  }
 }
 
 const cmd = new KickCommand();

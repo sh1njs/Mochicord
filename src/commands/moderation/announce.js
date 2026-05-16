@@ -8,54 +8,50 @@ import { PermissionFlagsBits } from "discord.js";
  * Requires the invoker to have the Administrator permission.
  */
 class AnnounceCommand extends Command {
-	constructor() {
-		super("announce", "Send an official announcement to this channel.", {
-			category: "moderation",
-			usage: "/announce <message>",
-		});
+  constructor() {
+    super("announce", "Send an official announcement to this channel.", {
+      category: "moderation",
+      usage: "/announce <message>",
+    });
 
-		this.data
-			.addStringOption((opt) =>
-				opt
-					.setName("message")
-					.setDescription("The announcement content.")
-					.setRequired(true)
-			)
-			.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
-	}
+    this.data
+      .addStringOption((opt) =>
+        opt
+          .setName("message")
+          .setDescription("The announcement content.")
+          .setRequired(true),
+      )
+      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  }
 
-	/** @param {import('discord.js').ChatInputCommandInteraction} interaction */
-	async run(interaction) {
-		const ok = await checkBotPermissions(interaction);
-		if (!ok) return;
+  /** @param {import('discord.js').ChatInputCommandInteraction} interaction */
+  async run(interaction) {
+    const ok = await checkBotPermissions(interaction);
+    if (!ok) return;
 
-		const message = interaction.options.getString("message");
+    const message = interaction.options.getString("message");
 
-		try {
-			await interaction.channel.send({
-				embeds: [
-					announcementEmbed(
-						message,
-						interaction.guild,
-						interaction.user
-					),
-				],
-			});
-			await interaction.reply({
-				content: "✅ Announcement sent.",
-				ephemeral: true,
-			});
-		} catch {
-			await interaction.reply({
-				embeds: [
-					errorEmbed(
-						"Failed to send the announcement. Check my channel permissions."
-					),
-				],
-				ephemeral: true,
-			});
-		}
-	}
+    try {
+      await interaction.channel.send({
+        embeds: [
+          announcementEmbed(message, interaction.guild, interaction.user),
+        ],
+      });
+      await interaction.reply({
+        content: "✅ Announcement sent.",
+        ephemeral: true,
+      });
+    } catch {
+      await interaction.reply({
+        embeds: [
+          errorEmbed(
+            "Failed to send the announcement. Check my channel permissions.",
+          ),
+        ],
+        ephemeral: true,
+      });
+    }
+  }
 }
 
 const cmd = new AnnounceCommand();

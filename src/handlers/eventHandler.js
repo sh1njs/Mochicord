@@ -14,16 +14,16 @@ const EVENTS_DIR = path.join(__dirname, "../events");
  * @returns {string[]}
  */
 function collectFiles(dir) {
-	const results = [];
-	for (const entry of readdirSync(dir)) {
-		const full = path.join(dir, entry);
-		if (statSync(full).isDirectory()) {
-			results.push(...collectFiles(full));
-		} else if (entry.endsWith(".js")) {
-			results.push(full);
-		}
-	}
-	return results;
+  const results = [];
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      results.push(...collectFiles(full));
+    } else if (entry.endsWith(".js")) {
+      results.push(full);
+    }
+  }
+  return results;
 }
 
 /**
@@ -35,31 +35,31 @@ function collectFiles(dir) {
  * @returns {Promise<void>}
  */
 export async function loadEvents(client) {
-	const files = collectFiles(EVENTS_DIR);
-	let loaded = 0;
+  const files = collectFiles(EVENTS_DIR);
+  let loaded = 0;
 
-	for (const file of files) {
-		const event = await import(pathToFileURL(file).href);
+  for (const file of files) {
+    const event = await import(pathToFileURL(file).href);
 
-		if (!event.name || !event.execute) {
-			logger.warn(
-				`Skipped event file — missing 'name' or 'execute': ${path.relative(EVENTS_DIR, file)}`
-			);
-			continue;
-		}
+    if (!event.name || !event.execute) {
+      logger.warn(
+        `Skipped event file — missing 'name' or 'execute': ${path.relative(EVENTS_DIR, file)}`,
+      );
+      continue;
+    }
 
-		const handler = (...args) => event.execute(...args);
+    const handler = (...args) => event.execute(...args);
 
-		if (event.once) {
-			client.once(event.name, handler);
-		} else {
-			client.on(event.name, handler);
-		}
+    if (event.once) {
+      client.once(event.name, handler);
+    } else {
+      client.on(event.name, handler);
+    }
 
-		const tag = event.once ? " (once)" : "";
-		logger.success(`Event loaded: ${event.name}${tag}`);
-		loaded++;
-	}
+    const tag = event.once ? " (once)" : "";
+    logger.success(`Event loaded: ${event.name}${tag}`);
+    loaded++;
+  }
 
-	logger.system(`${loaded} event(s) loaded.`);
+  logger.system(`${loaded} event(s) loaded.`);
 }

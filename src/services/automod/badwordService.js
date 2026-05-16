@@ -1,72 +1,72 @@
-import { loadGuild, saveGuild } from "#database/schema";
+import local from "#database/local";
 
 /**
- * Checks whether a message contains any blocked word for the guild.
+ * Checks if a message contains a forbidden word on the server.
  *
  * @param {string} guildId
- * @param {string} content  - Raw message content.
- * @returns {string|null}   - The matched word, or null if clean.
+ * @param {string} content - The raw message content.
+ * @returns {string|null} - The matching word, or null if clean.
  */
 export function findBadWord(guildId, content) {
-	const db = loadGuild(guildId);
-	if (!db.badword.enabled || !db.badword.words.length) return null;
+  const server = local.servers.get(guildId);
+  if (!server?.badword?.enabled || !server.badword.words.length) return null;
 
-	const lower = content.toLowerCase();
-	return db.badword.words.find((w) => lower.includes(w)) ?? null;
+  const lower = content.toLowerCase();
+  return server.badword.words.find((w) => lower.includes(w)) ?? null;
 }
 
 /**
- * Adds words to the guild's blocklist, ignoring duplicates.
+ * Adds a word to the server's blocklist, ignoring duplicates.
  *
- * @param {string}   guildId
- * @param {string[]} words - Already trimmed and lowercased.
- * @returns {number} Number of new words actually added.
+ * @param {string} guildId
+ * @param {string[]} words - Trimmed and lowercased.
+ * @returns {number} The number of new words successfully added.
  */
 export function addBadWords(guildId, words) {
-	const db = loadGuild(guildId);
-	const set = new Set(db.badword.words);
-	const before = set.size;
+  const server = local.servers.set(guildId, {});
+  const set = new Set(server.badword.words);
+  const before = set.size;
 
-	for (const w of words) set.add(w);
+  for (const w of words) set.add(w);
 
-	db.badword.words = [...set];
-	saveGuild(guildId, db);
-	return set.size - before;
+  server.badword.words = [...set];
+  local.save();
+  return set.size - before;
 }
 
 /**
- * Removes specific words from the blocklist.
+ * Removes the specified word from the block list.
  *
- * @param {string}   guildId
+ * @param {string} guildId
  * @param {string[]} words
- * @returns {number} Number of words actually removed.
+ * @returns {number} The number of words successfully removed.
  */
 export function removeBadWords(guildId, words) {
-	const db = loadGuild(guildId);
-	const before = db.badword.words.length;
-	db.badword.words = db.badword.words.filter((w) => !words.includes(w));
-	saveGuild(guildId, db);
-	return before - db.badword.words.length;
+  const server = local.servers.set(guildId, {});
+  const before = server.badword.words.length;
+  server.badword.words = server.badword.words.filter((w) => !words.includes(w));
+  local.save();
+  return before - server.badword.words.length;
 }
 
 /**
- * Enables or disables the badword filter for a guild.
+ * Enables or disables the badword filter for the server.
  *
- * @param {string}  guildId
+ * @param {string} guildId
  * @param {boolean} enabled
  */
 export function setBadwordEnabled(guildId, enabled) {
-	const db = loadGuild(guildId);
-	db.badword.enabled = enabled;
-	saveGuild(guildId, db);
+  const server = local.servers.set(guildId, {});
+  server.badword.enabled = enabled;
+  local.save();
 }
 
 /**
- * Returns the current blocklist for a guild.
+ * Returns the current server's banned words list.
  *
  * @param {string} guildId
  * @returns {string[]}
  */
 export function getBadWords(guildId) {
-	return loadGuild(guildId).badword.words;
+  return local.servers.get(guildId)?.badword?.words ?? [];
 }

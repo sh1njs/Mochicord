@@ -13,12 +13,12 @@ import { EmbedBuilder } from "discord.js";
  * @returns {EmbedBuilder}
  */
 export function infoEmbed(description, title) {
-	const embed = new EmbedBuilder()
-		.setColor(config.color.info)
-		.setDescription(description)
-		.setTimestamp();
-	if (title) embed.setTitle(title);
-	return embed;
+  const embed = new EmbedBuilder()
+    .setColor(config.color.info)
+    .setDescription(description)
+    .setTimestamp();
+  if (title) embed.setTitle(title);
+  return embed;
 }
 
 /**
@@ -28,12 +28,12 @@ export function infoEmbed(description, title) {
  * @returns {EmbedBuilder}
  */
 export function successEmbed(description, title) {
-	const embed = new EmbedBuilder()
-		.setColor(config.color.success)
-		.setDescription(`✅  ${description}`)
-		.setTimestamp();
-	if (title) embed.setTitle(title);
-	return embed;
+  const embed = new EmbedBuilder()
+    .setColor(config.color.success)
+    .setDescription(`✅  ${description}`)
+    .setTimestamp();
+  if (title) embed.setTitle(title);
+  return embed;
 }
 
 /**
@@ -43,12 +43,12 @@ export function successEmbed(description, title) {
  * @returns {EmbedBuilder}
  */
 export function errorEmbed(description, title) {
-	const embed = new EmbedBuilder()
-		.setColor(config.color.error)
-		.setDescription(`❌  ${description}`)
-		.setTimestamp();
-	if (title) embed.setTitle(title);
-	return embed;
+  const embed = new EmbedBuilder()
+    .setColor(config.color.error)
+    .setDescription(`❌  ${description}`)
+    .setTimestamp();
+  if (title) embed.setTitle(title);
+  return embed;
 }
 
 /**
@@ -58,12 +58,12 @@ export function errorEmbed(description, title) {
  * @returns {EmbedBuilder}
  */
 export function warnEmbed(description, title) {
-	const embed = new EmbedBuilder()
-		.setColor(config.color.warning)
-		.setDescription(`⚠️  ${description}`)
-		.setTimestamp();
-	if (title) embed.setTitle(title);
-	return embed;
+  const embed = new EmbedBuilder()
+    .setColor(config.color.warning)
+    .setDescription(`⚠️  ${description}`)
+    .setTimestamp();
+  if (title) embed.setTitle(title);
+  return embed;
 }
 
 /**
@@ -74,11 +74,11 @@ export function warnEmbed(description, title) {
  * @returns {EmbedBuilder}
  */
 export function announcementEmbed(description, guild, author) {
-	return new EmbedBuilder()
-		.setColor(config.color.default)
-		.setTitle("📢  Server Announcement")
-		.setDescription(description)
-		.setThumbnail(guild.iconURL({ dynamic: true }))
-		.setFooter({ text: guild.name, iconURL: author.displayAvatarURL() })
-		.setTimestamp();
+  return new EmbedBuilder()
+    .setColor(config.color.default)
+    .setTitle("📢  Server Announcement")
+    .setDescription(description)
+    .setThumbnail(guild.iconURL({ dynamic: true }))
+    .setFooter({ text: guild.name, iconURL: author.displayAvatarURL() })
+    .setTimestamp();
 }

@@ -1,49 +1,50 @@
 {
-	"name": "mochi",
-	"version": "1.0.0",
-	"description": "Mochi Discord Bot — modular, scalable, professional.",
-	"main": "src/index.js",
-	"type": "module",
-	"scripts": {
-		"start": "node src/index.js",
-		"dev": "node --watch src/index.js",
-		"deploy": "node src/handlers/deployHandler.js",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
-		"format": "prettier . --write",
-		"format:check": "prettier . --check"
-	},
-	"imports": {
-		"#client": "./src/client.js",
-		"#config": "./src/config/config.js",
-		"#structures/*": "./src/structures/*.js",
-		"#handlers/*": "./src/handlers/*.js",
-		"#services/*": "./src/services/*.js",
-		"#scrapers/*": "./src/services/scrapers/*.js",
-		"#utils/*": "./src/utils/*.js",
-		"#database/*": "./src/database/*.js"
-	},
-	"keywords": [
-		"mochi",
-		"bot",
-		"discord.js"
-	],
-	"author": "ShinanaFlowers",
-	"license": "MIT",
-	"dependencies": {
-		"discord.js": "^14.26.3",
-		"dotenv": "^17.4.2"
-	},
-	"devDependencies": {
-		"@babel/eslint-parser": "^7.28.4",
-		"@eslint/js": "^9.36.0",
-		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
-		"eslint": "^9.36.0",
-		"eslint-config-prettier": "^10.1.8",
-		"eslint-import-resolver-alias": "^1.1.2",
-		"eslint-plugin-import": "^2.32.0",
-		"eslint-plugin-prettier": "^5.5.4",
-		"globals": "^17.3.0",
-		"prettier": "^3.8.1"
-	}
+  "name": "Mochicord",
+  "version": "1.4.0",
+  "description": "Mochi Discord Bot — modular, scalable, professional.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "deploy": "node src/handlers/deployHandler.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "imports": {
+    "#client": "./src/client.js",
+    "#config": "./src/config/config.js",
+    "#structures/*": "./src/structures/*.js",
+    "#handlers/*": "./src/handlers/*.js",
+    "#services/*": "./src/services/*.js",
+    "#scrapers/*": "./src/services/scrapers/*.js",
+    "#utils/*": "./src/utils/*.js",
+    "#database/schema/index": "./src/database/schema/index.js",
+    "#database/*": "./src/database/*.js"
+  },
+  "keywords": [
+    "mochi",
+    "bot",
+    "discord.js"
+  ],
+  "author": "ShinanaFlowers",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.26.3",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.28.4",
+    "@eslint/js": "^9.36.0",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1"
+  }
 }
