@@ -1,13 +1,3 @@
-import local from "#database/local";
-import {
-  addBadWords,
-  getBadWords,
-  removeBadWords,
-  setBadwordEnabled,
-} from "#services/automod/badwordService";
-import { Command } from "#structures/Command";
-import { errorEmbed, infoEmbed, successEmbed, warnEmbed } from "#utils/embeds";
-import { parseCommaSeparated } from "#utils/helpers";
 import {
   ActionRowBuilder,
   ModalBuilder,
@@ -15,6 +5,16 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
+import {
+  addBadWords,
+  getBadWords,
+  removeBadWords,
+  setBadwordEnabled,
+} from "#services/automod/badwordService";
+import { Command } from "#structures/Command";
+import db from "#database/MochiDB";
+import { errorEmbed, infoEmbed, successEmbed, warnEmbed } from "#utils/embeds";
+import { parseCommaSeparated } from "#utils/helpers";
 
 /**
  * `/badword` — Manage the per-guild bad word filter.
@@ -151,7 +151,7 @@ class BadwordCommand extends Command {
 
       case "list": {
         const words = getBadWords(guildId);
-        const server = local.servers.get(guildId);
+        const server = db.servers.get(guildId);
 
         if (!words.length) {
           return interaction.reply({

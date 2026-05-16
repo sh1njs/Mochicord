@@ -1,12 +1,3 @@
-import local from "#database/local";
-import {
-  setWelcomeChannel,
-  setWelcomeEnabled,
-  setWelcomeMessage,
-} from "#services/automod/welcomeService";
-import { Command } from "#structures/Command";
-import { WELCOME_PLACEHOLDERS } from "#utils/constants";
-import { infoEmbed, successEmbed } from "#utils/embeds";
 import {
   ActionRowBuilder,
   ChannelType,
@@ -15,18 +6,29 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
+import {
+  setWelcomeChannel,
+  setWelcomeEnabled,
+  setWelcomeMessage,
+} from "#services/automod/welcomeService";
+import { Command } from "#structures/Command";
+import { ensureGuildConfig } from "#services/guild/guildService";
+import db from "#database/MochiDB";
+import { WELCOME_PLACEHOLDERS } from "#utils/constants";
+import { errorEmbed, infoEmbed, successEmbed } from "#utils/embeds";
 
 /**
  * `/welcome` — Configure the per-guild welcome system.
- * Subcommands: enable | disable | setchannel | setmessage
+ * Subcommands: enable | disable | setchannel | setmessage | status
  *
  * Requires ManageGuild permission.
+ * Channel must be set before enabling or changing the message.
  */
 class WelcomeCommand extends Command {
   constructor() {
     super("welcome", "Configure the welcome message system for this server.", {
       category: "automod",
-      usage: "/welcome <enable|disable|setchannel|setmessage>",
+      usage: "/welcome <enable|disable|setchannel|setmessage|status>",
     });
 
     this.data
@@ -53,19 +55,39 @@ class WelcomeCommand extends Command {
           .setName("setmessage")
           .setDescription("Customize the welcome message via a form."),
       )
+      .addSubcommand((sub) =>
+        sub.setName("status").setDescription("Show current welcome settings."),
+      )
       .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
   }
 
   /** @param {import('discord.js').ChatInputCommandInteraction} interaction */
   async run(interaction) {
     const sub = interaction.options.getSubcommand();
-    const guildId = interaction.guildId;
+    const { guildId, guild } = interaction;
+    ensureGuildConfig(guildId, guild.name);
+    const server = db.servers.get(guildId);
 
     switch (sub) {
       case "enable": {
+        // Must have a channel set first
+        if (!server?.welcome?.channelId) {
+          return interaction.reply({
+            embeds: [
+              errorEmbed(
+                "You need to set a welcome channel first!\nUse `/welcome setchannel #channel` before enabling.",
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
         setWelcomeEnabled(guildId, true);
         return interaction.reply({
-          embeds: [successEmbed("Welcome system has been **enabled**.")],
+          embeds: [
+            successEmbed(
+              `Welcome system has been **enabled**.\nMessages will be sent to <#${server.welcome.channelId}>.`,
+            ),
+          ],
         });
       }
 
@@ -80,12 +102,26 @@ class WelcomeCommand extends Command {
         const channel = interaction.options.getChannel("channel");
         setWelcomeChannel(guildId, channel.id);
         return interaction.reply({
-          embeds: [successEmbed(`Welcome channel set to ${channel}.`)],
+          embeds: [
+            successEmbed(
+              `Welcome channel set to ${channel}.\nYou can now use \`/welcome enable\` to activate it.`,
+            ),
+          ],
         });
       }
 
       case "setmessage": {
-        const server = local.servers.get(guildId);
+        // Must have a channel set first
+        if (!server?.welcome?.channelId) {
+          return interaction.reply({
+            embeds: [
+              errorEmbed(
+                "You need to set a welcome channel first!\nUse `/welcome setchannel #channel` before customizing the message.",
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
 
         // Show a pre-filled modal with the current message template.
         const modal = new ModalBuilder()
@@ -111,7 +147,7 @@ class WelcomeCommand extends Command {
             time: 60_000,
           });
         } catch {
-          return; // Dismissed or timed out.
+          return;
         }
 
         const message = submitted.fields.getTextInputValue(
@@ -132,17 +168,17 @@ class WelcomeCommand extends Command {
         break;
       }
 
+      case "status":
       default: {
-        const server = local.servers.get(guildId);
         const status = server?.welcome?.enabled ? "🟢 Enabled" : "🔴 Disabled";
         const ch = server?.welcome?.channelId
           ? `<#${server.welcome.channelId}>`
-          : "*not set*";
+          : "*not set — use `/welcome setchannel` first*";
 
         return interaction.reply({
           embeds: [
             infoEmbed(
-              `**Status:** ${status}\n**Channel:** ${ch}\n**Message:** ${server?.welcome?.message ?? "*not set*"}`,
+              `**Status:** ${status}\n**Channel:** ${ch}\n**Message:**\n${server?.welcome?.message ?? "*default*"}`,
               "Welcome System Settings",
             ),
           ],

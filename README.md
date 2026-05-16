@@ -1,11 +1,11 @@
-# 🍡 Mochi — Discord Bot
+# Mochi — Discord Bot
 
 A modular, scalable Discord bot built with **discord.js v14**.  
-Clean architecture · Per-guild JSON database · Professional logging · Slash commands
+Clean architecture · Unified local JSON database · Professional logging · Slash commands
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 mochi/
@@ -14,7 +14,7 @@ mochi/
 │   │   ├── moderation/     # ban, kick, announce
 │   │   ├── utility/        # ping, help
 │   │   ├── automod/        # badword, welcome
-│   │   └── owner/          # eval
+│   │   └── owner/          # eval, exec
 │   │
 │   ├── events/
 │   │   ├── client/         # ready, interactionCreate
@@ -34,8 +34,9 @@ mochi/
 │   │       └── guildService.js
 │   │
 │   ├── database/
-│   │   ├── guilds/         # Per-guild JSON files (auto-created)
-│   │   └── schema.js       # Load/save helpers + default schema
+│   │   ├── schema/
+│   │   │   └── index.js    # ServerSchema, UserSchema, SettingsSchema
+│   │   └── local.js        # LocalDB — unified JSON database
 │   │
 │   ├── structures/
 │   │   └── Command.js      # Base class for all commands
@@ -53,6 +54,9 @@ mochi/
 │   ├── client.js           # Discord client factory
 │   └── index.js            # Entry point
 │
+├── sessions/
+│   └── database.json       # Auto-created on first run
+│
 ├── .env                    # Secret tokens (never commit this)
 ├── package.json
 └── README.md
@@ -60,7 +64,7 @@ mochi/
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. Install dependencies
 
@@ -70,34 +74,40 @@ npm install
 
 ### 2. Configure environment
 
-Copy `.env` and fill in your values:
+Copy `.env.example` to `.env` and fill in your values:
 
 ```env
 DISCORD_TOKEN=your_token_here
 CLIENT_ID=your_client_id_here
-GUILD_ID=your_guild_id_here   # Optional: faster dev deploys
-OWNER_ID=your_user_id_here    # Required for /eval
+OWNER_ID=your_user_id_here
 ```
 
-### 3. Deploy slash commands
+> `DATABASE_LOCAL_PATH` is optional — defaults to `./sessions/database.json`.
+
+### 3. Start the bot
+
+```bash
+# Development (auto-restarts on file changes)
+npm run dev
+
+# Production
+npm start
+```
+
+The bot will automatically register every server it's in to the database on startup.
+
+### 4. Deploy slash commands
 
 ```bash
 npm run deploy
 ```
 
-### 4. Start the bot
-
-```bash
-# Production
-npm start
-
-# Development (auto-restarts on file changes)
-npm run dev
-```
+Commands are deployed to **all servers** stored in the database (instant guild deploy).  
+If the database has no servers yet, it falls back to a global deploy (~1 hour to propagate).
 
 ---
 
-## 🛡️ Features
+## Features
 
 ### Bad Word Filter (`/badword`)
 
@@ -110,11 +120,10 @@ npm run dev
 | `/badword list`           | Show all blocked words        |
 
 - Disabled by default
-- Per-server configuration stored in `database/guilds/{guildId}.json`
-- Case-insensitive matching
-- Duplicate prevention
-- Auto-deletes offending messages
-- Sends a warning DM to the user
+- Per-server configuration stored in the unified database
+- Case-insensitive matching with duplicate prevention
+- Auto-deletes offending messages and sends a warning DM
+- Temporary ban issued after reaching the warning threshold (default: 3 warnings in 24h)
 
 ### Welcome System (`/welcome`)
 
@@ -148,9 +157,55 @@ npm run dev
 
 ### Owner Only
 
-| Command        | Description                                   |
-| -------------- | --------------------------------------------- |
-| `/eval <code>` | Execute JavaScript (restricted to `OWNER_ID`) |
+| Command         | Description                                   |
+| --------------- | --------------------------------------------- |
+| `/eval <code>`  | Execute JavaScript (restricted to `OWNER_ID`) |
+| `/exec <shell>` | Execute shell commands (restricted to `OWNER_ID`) |
+
+---
+
+## Database
+
+All data is stored in a single JSON file at `sessions/database.json`, auto-created on first run.  
+No external database or setup required.
+
+The database is managed by `LocalDB` (`src/database/local.js`) with three collections:
+
+| Collection  | Key        | Description                              |
+| ----------- | ---------- | ---------------------------------------- |
+| `servers`   | `guildId`  | Per-server config (badword, welcome)     |
+| `users`     | `userId`   | Per-user data (name, warnings)           |
+| `settings`  | any        | Global bot settings (reserved)           |
+
+**Server schema:**
+
+```json
+{
+  "id": "guild_id",
+  "name": "Server Name",
+  "badword": {
+    "enabled": false,
+    "words": []
+  },
+  "welcome": {
+    "enabled": false,
+    "channelId": null,
+    "message": "{user} just joined **{server}**! Welcome, you are member **#{membercount}**! 🎉"
+  }
+}
+```
+
+**User schema:**
+
+```json
+{
+  "id": "user_id",
+  "name": "Username",
+  "warnings": []
+}
+```
+
+The database auto-saves every 10 seconds and immediately on any write operation.
 
 ---
 
@@ -158,34 +213,34 @@ npm run dev
 
 1. Create a file in the appropriate category folder:
 
-   ```
-   src/commands/utility/mycommand.js
-   ```
+    ```
+    src/commands/utility/mycommand.js
+    ```
 
 2. Use the `Command` base class:
 
-   ```js
-   import { Command } from "#structures/Command";
-   import { successEmbed } from "#utils/embeds";
+    ```js
+    import { Command } from "#structures/Command";
+    import { successEmbed } from "#utils/embeds";
 
-   class MyCommand extends Command {
-     constructor() {
-       super("mycommand", "Does something cool.", {
-         category: "utility",
-         usage: "/mycommand",
-       });
-     }
+    class MyCommand extends Command {
+    	constructor() {
+    		super("mycommand", "Does something cool.", {
+    			category: "utility",
+    			usage: "/mycommand",
+    		});
+    	}
 
-     async run(interaction) {
-       await interaction.reply({ embeds: [successEmbed("It works!")] });
-     }
-   }
+    	async run(interaction) {
+    		await interaction.reply({ embeds: [successEmbed("It works!")] });
+    	}
+    }
 
-   const cmd = new MyCommand();
-   export const data = cmd.data;
-   export const execute = (i) => cmd.execute(i);
-   export const meta = cmd.meta;
-   ```
+    const cmd = new MyCommand();
+    export const data = cmd.data;
+    export const execute = (i) => cmd.execute(i);
+    export const meta = cmd.meta;
+    ```
 
 3. Redeploy with `npm run deploy`. The handler picks it up automatically.
 
@@ -195,65 +250,41 @@ npm run dev
 
 1. Create a file in the appropriate subfolder:
 
-   ```
-   src/events/guild/myevent.js
-   ```
+    ```
+    src/events/guild/myevent.js
+    ```
 
 2. Export `name`, `execute`, and optionally `once`:
 
-   ```js
-   import { Events } from "discord.js";
+    ```js
+    import { Events } from "discord.js";
 
-   export const name = Events.GuildDelete;
+    export const name = Events.GuildDelete;
 
-   export async function execute(guild) {
-     console.log(`Left guild: ${guild.name}`);
-   }
-   ```
+    export async function execute(guild) {
+    	console.log(`Left guild: ${guild.name}`);
+    }
+    ```
 
 No registration needed — the event handler discovers it automatically.
 
 ---
 
-## 🗃️ Database
-
-Each guild gets its own JSON file at `src/database/guilds/{guildId}.json`.  
-Files are auto-created on first bot interaction using the default schema in `schema.js`.
-
-**Default schema:**
-
-```json
-{
-  "badword": {
-    "enabled": false,
-    "words": []
-  },
-  "welcome": {
-    "enabled": false,
-    "channelId": null,
-    "message": "{user} just joined **{server}**! Welcome! 🎉"
-  },
-  "warnings": {}
-}
-```
-
----
-
-## 🔧 Configuration
+## Configuration
 
 All tuneable values are in `src/config/config.js`:
 
 - Embed colors
-- Automod warning thresholds
-- Temp ban duration
+- Automod warning thresholds (`maxWarnings`, `warningExpiry`)
+- Temp ban duration (`tempBanDuration`)
 - Required bot permissions
 
 ---
 
-## 📋 Requirements
+## Requirements
 
 - Node.js **18+** (for top-level `await`)
 - discord.js **v14**
 - A Discord bot application with the following intents enabled in the developer portal:
-  - **Server Members Intent**
-  - **Message Content Intent**
+    - **Server Members Intent**
+    - **Message Content Intent**

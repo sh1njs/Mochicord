@@ -3,11 +3,12 @@
  * Run with: `npm run deploy`
  *
  * Deployment logic:
- * 1. Read all servers registered in the local database.
- * 2. If any exist, deploy guild commands to all servers (instant).
- * 3. If the database is empty, fallback to global deploy (propagation takes ~1 hour).
+ * 1. Load all local commands and fetch currently deployed commands per guild.
+ * 2. If new commands are detected (diff by name), deploy to that guild only.
+ * 3. If --force flag is passed, deploy to all servers regardless.
+ * 4. If the database is empty, fallback to global deploy.
  */
-import local from "#database/local";
+import db from "#database/MochiDB";
 import { logger } from "#utils/logger";
 import { REST, Routes } from "discord.js";
 import "dotenv/config";
@@ -17,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const COMMANDS_DIR = path.join(__dirname, "../commands");
+const FORCE = process.argv.includes("--force");
 
 /** Recursively collect all .js files in the commands folder. */
 function collectFiles(dir) {
@@ -30,43 +32,76 @@ function collectFiles(dir) {
   return results;
 }
 
+// Load all local commands
 const commands = [];
 for (const file of collectFiles(COMMANDS_DIR)) {
   const mod = await import(pathToFileURL(file).href);
   if (mod.data) commands.push(mod.data.toJSON());
 }
 
-await local.initialize();
-const servers = Object.keys(local.servers.all());
+const localNames = new Set(commands.map((c) => c.name));
 
+await db.initialize();
+const servers = Object.keys(db.servers.all());
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
-try {
-  logger.system(`Deploying ${commands.length} slash command(s)...`);
+logger.system(
+  `Loaded ${commands.length} local command(s): ${[...localNames].join(", ")}`,
+);
 
+try {
   if (servers.length > 0) {
     logger.system(
-      `Found ${servers.length} server(s) in database. Deploying to each...`,
+      `Found ${servers.length} server(s) in database. Checking for new commands...`,
     );
 
     const results = await Promise.allSettled(
-      servers.map((guildId) =>
-        rest
-          .put(
+      servers.map(async (guildId) => {
+        try {
+          // Fetch currently deployed commands for this guild
+          let deployed = [];
+          if (!FORCE) {
+            deployed = await rest.get(
+              Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+            );
+          }
+
+          const deployedNames = new Set(deployed.map((c) => c.name));
+
+          // Find new commands not yet deployed to this guild
+          const newCommands = commands.filter(
+            (c) => !deployedNames.has(c.name),
+          );
+
+          if (!FORCE && newCommands.length === 0) {
+            logger.info(`Server ${guildId} — no new commands, skipped.`);
+            return { guildId, ok: true, skipped: true };
+          }
+
+          const reason = FORCE
+            ? "force deploy"
+            : `${newCommands.length} new command(s): ${newCommands.map((c) => c.name).join(", ")}`;
+
+          await rest.put(
             Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
             { body: commands },
-          )
-          .then(() => ({ guildId, ok: true }))
-          .catch((err) => ({ guildId, ok: false, err: err.message })),
-      ),
+          );
+
+          return { guildId, ok: true, skipped: false, reason };
+        } catch (err) {
+          return { guildId, ok: false, err: err.message };
+        }
+      }),
     );
 
     for (const result of results) {
-      const { guildId, ok, err } = result.value;
-      if (ok) {
-        logger.success(`Deployed to server ${guildId}.`);
-      } else {
+      const { guildId, ok, skipped, reason, err } = result.value;
+      if (!ok) {
         logger.error(`Failed to deploy to server ${guildId}: ${err}`);
+      } else if (skipped) {
+        logger.info(`Server ${guildId} — up to date, skipped.`);
+      } else {
+        logger.success(`Deployed to server ${guildId} (${reason}).`);
       }
     }
   } else {

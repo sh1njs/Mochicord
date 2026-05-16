@@ -42,7 +42,7 @@ class Helper {
   }
 }
 
-class LocalDB {
+class MochiDB {
   #initialized = false;
   #path = process.env.DATABASE_LOCAL_PATH ?? "./sessions/database.json";
   #data = {
@@ -95,5 +95,5 @@ class LocalDB {
   }
 }
 
-const local = new LocalDB();
-export default local;
+const db = new MochiDB();
+export default db;

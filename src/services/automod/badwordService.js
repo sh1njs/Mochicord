@@ -1,4 +1,4 @@
-import local from "#database/local";
+import db from "#database/MochiDB";
 
 /**
  * Checks if a message contains a forbidden word on the server.
@@ -8,7 +8,7 @@ import local from "#database/local";
  * @returns {string|null} - The matching word, or null if clean.
  */
 export function findBadWord(guildId, content) {
-  const server = local.servers.get(guildId);
+  const server = db.servers.get(guildId);
   if (!server?.badword?.enabled || !server.badword.words.length) return null;
 
   const lower = content.toLowerCase();
@@ -23,14 +23,14 @@ export function findBadWord(guildId, content) {
  * @returns {number} The number of new words successfully added.
  */
 export function addBadWords(guildId, words) {
-  const server = local.servers.set(guildId, {});
+  const server = db.servers.set(guildId, {});
   const set = new Set(server.badword.words);
   const before = set.size;
 
   for (const w of words) set.add(w);
 
   server.badword.words = [...set];
-  local.save();
+  db.save();
   return set.size - before;
 }
 
@@ -42,10 +42,10 @@ export function addBadWords(guildId, words) {
  * @returns {number} The number of words successfully removed.
  */
 export function removeBadWords(guildId, words) {
-  const server = local.servers.set(guildId, {});
+  const server = db.servers.set(guildId, {});
   const before = server.badword.words.length;
   server.badword.words = server.badword.words.filter((w) => !words.includes(w));
-  local.save();
+  db.save();
   return before - server.badword.words.length;
 }
 
@@ -56,9 +56,9 @@ export function removeBadWords(guildId, words) {
  * @param {boolean} enabled
  */
 export function setBadwordEnabled(guildId, enabled) {
-  const server = local.servers.set(guildId, {});
+  const server = db.servers.set(guildId, {});
   server.badword.enabled = enabled;
-  local.save();
+  db.save();
 }
 
 /**
@@ -68,5 +68,5 @@ export function setBadwordEnabled(guildId, enabled) {
  * @returns {string[]}
  */
 export function getBadWords(guildId) {
-  return local.servers.get(guildId)?.badword?.words ?? [];
+  return db.servers.get(guildId)?.badword?.words ?? [];
 }

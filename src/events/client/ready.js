@@ -1,5 +1,5 @@
 import { ensureGuildConfig } from "#services/guild/guildService";
-import local from "#database/local";
+import db from "#database/MochiDB";
 import { logger } from "#utils/logger";
 import { ActivityType, Events } from "discord.js";
 
@@ -18,8 +18,8 @@ export async function execute(client) {
   logger.system(`Logged in as ${client.user.tag}`);
 
   // Initialize database & start auto-save
-  await local.initialize();
-  local.savePeriodically(10_000);
+  await db.initialize();
+  db.savePeriodically(10_000);
 
   // Register every guild the bot is already in
   for (const [guildId, guild] of client.guilds.cache) {

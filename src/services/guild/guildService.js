@@ -1,4 +1,4 @@
-import local from "#database/local";
+import db from "#database/MochiDB";
 import { logger } from "#utils/logger";
 
 /**
@@ -10,11 +10,11 @@ import { logger } from "#utils/logger";
  * @returns {object} Data server
  */
 export function ensureGuildConfig(guildId, guildName = "") {
-  const existing = local.servers.get(guildId);
+  const existing = db.servers.get(guildId);
   if (existing) return existing;
 
-  const server = local.servers.set(guildId, { id: guildId, name: guildName });
-  local.save();
+  const server = db.servers.set(guildId, { id: guildId, name: guildName });
+  db.save();
   return server;
 }
 
@@ -32,14 +32,14 @@ export function addWarning(guildId, userId, userName = "") {
   const EXPIRY = 24 * 60 * 60 * 1000;
 
   // Make sure the user exists in the database, then retrieve the data
-  local.users.set(userId, { id: userId, name: userName });
-  const user = local.users.get(userId);
+  db.users.set(userId, { id: userId, name: userName });
+  const user = db.users.get(userId);
 
   if (!user.warnings) user.warnings = [];
   user.warnings.push(now);
   user.warnings = user.warnings.filter((t) => now - t < EXPIRY);
 
-  local.save();
+  db.save();
 
   logger.debug(
     `Warning added for user ${userId} in guild ${guildId} — total: ${user.warnings.length}`,
@@ -53,9 +53,9 @@ export function addWarning(guildId, userId, userName = "") {
  * @param {string} userId
  */
 export function clearWarnings(userId) {
-  const user = local.users.get(userId);
+  const user = db.users.get(userId);
   if (!user) return;
 
   user.warnings = [];
-  local.save();
+  db.save();
 }

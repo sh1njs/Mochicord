@@ -1,4 +1,4 @@
-import local from "#database/local";
+import db from "#database/MochiDB";
 import { config } from "#config";
 import { resolveWelcomeMessage } from "#utils/helpers";
 import { EmbedBuilder } from "discord.js";
@@ -10,9 +10,9 @@ import { EmbedBuilder } from "discord.js";
  * @param {string} channelId
  */
 export function setWelcomeChannel(guildId, channelId) {
-  const server = local.servers.set(guildId, {});
+  const server = db.servers.set(guildId, {});
   server.welcome.channelId = channelId;
-  local.save();
+  db.save();
 }
 
 /**
@@ -22,9 +22,9 @@ export function setWelcomeChannel(guildId, channelId) {
  * @param {string} message - Raw template with placeholders.
  */
 export function setWelcomeMessage(guildId, message) {
-  const server = local.servers.set(guildId, {});
+  const server = db.servers.set(guildId, {});
   server.welcome.message = message;
-  local.save();
+  db.save();
 }
 
 /**
@@ -34,9 +34,9 @@ export function setWelcomeMessage(guildId, message) {
  * @param {boolean} enabled
  */
 export function setWelcomeEnabled(guildId, enabled) {
-  const server = local.servers.set(guildId, {});
+  const server = db.servers.set(guildId, {});
   server.welcome.enabled = enabled;
-  local.save();
+  db.save();
 }
 
 /**
@@ -47,7 +47,7 @@ export function setWelcomeEnabled(guildId, enabled) {
  * @returns {Promise<void>}
  */
 export async function sendWelcomeMessage(member) {
-  const server = local.servers.get(member.guild.id);
+  const server = db.servers.get(member.guild.id);
   if (!server?.welcome?.enabled || !server.welcome.channelId) return;
 
   const channel = member.guild.channels.cache.get(server.welcome.channelId);

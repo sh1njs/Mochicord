@@ -1,8 +1,7 @@
 import { logger } from "#utils/logger";
 import { readdirSync, statSync } from "fs";
 import path from "path";
-import { pathToFileURL } from "url";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EVENTS_DIR = path.join(__dirname, "../events");

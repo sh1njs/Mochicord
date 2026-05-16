@@ -9,10 +9,12 @@ import { Client, Collection, GatewayIntentBits } from "discord.js";
 export function createClient() {
   const client = new Client({
     intents: [
-      GatewayIntentBits.Guilds, // Required for guild info
-      GatewayIntentBits.GuildMessages, // Required to receive messages
+      GatewayIntentBits.Guilds, // Guild info, emoji, sticker events
+      GatewayIntentBits.GuildMessages, // Message create/delete/update
       GatewayIntentBits.MessageContent, // Required to read message text
-      GatewayIntentBits.GuildMembers, // Required for member join events
+      GatewayIntentBits.GuildMembers, // Member join/leave events
+      GatewayIntentBits.GuildVoiceStates, // Voice join/leave/move events
+      GatewayIntentBits.GuildExpressions, // Emoji & sticker create/delete
     ],
   });
 
