@@ -30,14 +30,14 @@ export async function sendLog(guild, embed) {
 /** Message deleted */
 export function messageDeleteEmbed(message) {
   const embed = new EmbedBuilder()
-    .setColor(0xed4245) // red
+    .setColor(0xed4245)
+    .setAuthor({
+      name: message.author.username,
+      iconURL: message.author.displayAvatarURL({ dynamic: true }),
+    })
     .setTitle("🗑️  Message Deleted")
     .addFields(
-      {
-        name: "Author",
-        value: `${message.author} (${message.author.tag})`,
-        inline: true,
-      },
+      { name: "Author", value: `${message.author} (${message.author.tag})`, inline: true },
       { name: "Channel", value: `${message.channel}`, inline: true },
       {
         name: "Content",
@@ -50,10 +50,7 @@ export function messageDeleteEmbed(message) {
   if (message.attachments.size > 0) {
     embed.addFields({
       name: "Attachments",
-      value: message.attachments
-        .map((a) => a.url)
-        .join("\n")
-        .slice(0, 1024),
+      value: message.attachments.map((a) => a.url).join("\n").slice(0, 1024),
     });
   }
 
@@ -63,15 +60,14 @@ export function messageDeleteEmbed(message) {
 /** Message edited */
 export function messageUpdateEmbed(oldMessage, newMessage) {
   return new EmbedBuilder()
-    .setColor(0xfee75c) // yellow
+    .setColor(0xfee75c)
+    .setAuthor({
+      name: newMessage.author.username,
+      iconURL: newMessage.author.displayAvatarURL({ dynamic: true }),
+    })
     .setTitle("✏️  Message Edited")
     .setURL(newMessage.url)
     .addFields(
-      {
-        name: "Author",
-        value: `${newMessage.author} (${newMessage.author.tag})`,
-        inline: true,
-      },
       { name: "Channel", value: `${newMessage.channel}`, inline: true },
       {
         name: "Before",
@@ -92,17 +88,16 @@ export function memberJoinEmbed(member) {
     (Date.now() - member.user.createdTimestamp) / 86_400_000,
   );
   return new EmbedBuilder()
-    .setColor(0x57f287) // green
+    .setColor(0x57f287)
+    .setAuthor({
+      name: member.user.username,
+      iconURL: member.user.displayAvatarURL({ dynamic: true }),
+    })
     .setTitle("📥  Member Joined")
-    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
     .addFields(
       { name: "User", value: `${member} (${member.user.tag})`, inline: true },
       { name: "Account Age", value: `${accountAge} day(s)`, inline: true },
-      {
-        name: "Member Count",
-        value: `${member.guild.memberCount}`,
-        inline: true,
-      },
+      { name: "Member Count", value: `${member.guild.memberCount}`, inline: true },
     )
     .setFooter({ text: `User ID: ${member.id}` })
     .setTimestamp();
@@ -111,16 +106,15 @@ export function memberJoinEmbed(member) {
 /** Member left */
 export function memberLeaveEmbed(member) {
   return new EmbedBuilder()
-    .setColor(0xed4245) // red
+    .setColor(0xed4245)
+    .setAuthor({
+      name: member.user.username,
+      iconURL: member.user.displayAvatarURL({ dynamic: true }),
+    })
     .setTitle("📤  Member Left")
-    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
     .addFields(
       { name: "User", value: `${member.user.tag}`, inline: true },
-      {
-        name: "Member Count",
-        value: `${member.guild.memberCount}`,
-        inline: true,
-      },
+      { name: "Member Count", value: `${member.guild.memberCount}`, inline: true },
       {
         name: "Roles",
         value:
@@ -155,26 +149,19 @@ export function voiceStateEmbed(oldState, newState, member) {
     color = 0xfee75c;
     description = `${member} moved from **${oldCh.name}** → **${newCh.name}**`;
   } else {
-    // Mute/deafen/stream state changes — still log but mark subtle
     const changes = [];
     if (oldState.mute !== newState.mute)
       changes.push(newState.mute ? "🔇 Server muted" : "🔊 Server unmuted");
     if (oldState.deaf !== newState.deaf)
-      changes.push(
-        newState.deaf ? "🙉 Server deafened" : "👂 Server undeafened",
-      );
+      changes.push(newState.deaf ? "🙉 Server deafened" : "👂 Server undeafened");
     if (oldState.selfMute !== newState.selfMute)
       changes.push(newState.selfMute ? "🎤 Self-muted" : "🎤 Self-unmuted");
     if (oldState.selfDeaf !== newState.selfDeaf)
-      changes.push(
-        newState.selfDeaf ? "🎧 Self-deafened" : "🎧 Self-undeafened",
-      );
+      changes.push(newState.selfDeaf ? "🎧 Self-deafened" : "🎧 Self-undeafened");
     if (oldState.streaming !== newState.streaming)
-      changes.push(
-        newState.streaming ? "📡 Started streaming" : "📡 Stopped streaming",
-      );
+      changes.push(newState.streaming ? "📡 Started streaming" : "📡 Stopped streaming");
 
-    if (changes.length === 0) return null; // nothing meaningful changed
+    if (changes.length === 0) return null;
     title = "🔊  Voice State Changed";
     color = 0x5865f2;
     description = `${member} in **${newCh?.name ?? oldCh?.name ?? "Unknown"}**\n${changes.join("\n")}`;
@@ -182,6 +169,10 @@ export function voiceStateEmbed(oldState, newState, member) {
 
   return new EmbedBuilder()
     .setColor(color)
+    .setAuthor({
+      name: member.user.username,
+      iconURL: member.user.displayAvatarURL({ dynamic: true }),
+    })
     .setTitle(title)
     .setDescription(description)
     .setFooter({ text: `User ID: ${member.id}` })
@@ -192,11 +183,14 @@ export function voiceStateEmbed(oldState, newState, member) {
 export function emojiCreateEmbed(emoji) {
   return new EmbedBuilder()
     .setColor(0x57f287)
+    .setAuthor({
+      name: emoji.guild.name,
+      iconURL: emoji.guild.iconURL({ dynamic: true }),
+    })
     .setTitle("😄  Emoji Added")
     .setThumbnail(emoji.url)
     .addFields(
       { name: "Name", value: `:${emoji.name}:`, inline: true },
-      { name: "ID", value: emoji.id, inline: true },
       { name: "Animated", value: emoji.animated ? "Yes" : "No", inline: true },
     )
     .setFooter({ text: `Emoji ID: ${emoji.id}` })
@@ -207,10 +201,13 @@ export function emojiCreateEmbed(emoji) {
 export function emojiDeleteEmbed(emoji) {
   return new EmbedBuilder()
     .setColor(0xed4245)
+    .setAuthor({
+      name: emoji.guild.name,
+      iconURL: emoji.guild.iconURL({ dynamic: true }),
+    })
     .setTitle("😢  Emoji Removed")
     .addFields(
       { name: "Name", value: `:${emoji.name}:`, inline: true },
-      { name: "ID", value: emoji.id, inline: true },
     )
     .setFooter({ text: `Emoji ID: ${emoji.id}` })
     .setTimestamp();
@@ -220,11 +217,14 @@ export function emojiDeleteEmbed(emoji) {
 export function stickerCreateEmbed(sticker) {
   return new EmbedBuilder()
     .setColor(0x57f287)
+    .setAuthor({
+      name: sticker.guild.name,
+      iconURL: sticker.guild.iconURL({ dynamic: true }),
+    })
     .setTitle("🎨  Sticker Added")
     .addFields(
       { name: "Name", value: sticker.name, inline: true },
-      { name: "ID", value: sticker.id, inline: true },
-      { name: "Description", value: sticker.description || "*none*" },
+      { name: "Description", value: sticker.description || "*none*", inline: true },
     )
     .setFooter({ text: `Sticker ID: ${sticker.id}` })
     .setTimestamp();
@@ -234,10 +234,13 @@ export function stickerCreateEmbed(sticker) {
 export function stickerDeleteEmbed(sticker) {
   return new EmbedBuilder()
     .setColor(0xed4245)
+    .setAuthor({
+      name: sticker.guild.name,
+      iconURL: sticker.guild.iconURL({ dynamic: true }),
+    })
     .setTitle("🗑️  Sticker Removed")
     .addFields(
       { name: "Name", value: sticker.name, inline: true },
-      { name: "ID", value: sticker.id, inline: true },
     )
     .setFooter({ text: `Sticker ID: ${sticker.id}` })
     .setTimestamp();

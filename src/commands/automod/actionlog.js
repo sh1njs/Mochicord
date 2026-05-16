@@ -18,7 +18,7 @@ import { errorEmbed, infoEmbed, successEmbed } from "#utils/embeds";
 class ActionlogCommand extends Command {
   constructor() {
     super("actionlog", "Configure the action log system for this server.", {
-      category: "utility",
+      category: "automod",
       usage: "/actionlog <enable|disable|setchannel|status>",
     });
 
