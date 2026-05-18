@@ -27,7 +27,7 @@ export const ServerSchema = {
     enabled: false,
     channelId: null,
     message:
-      "{user} just joined **{server}**! Welcome, you are member **#{membercount}**! 🎉",
+      "Welcome {user} to **{server}** ✨\nYou just joined as member #{membercount}.\n\nHope you enjoy your stay here, make yourself at home!",
   }),
   /** Action log configuration */
   actionlog: () => ({

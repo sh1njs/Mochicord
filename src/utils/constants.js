@@ -12,4 +12,4 @@ export const WELCOME_PLACEHOLDERS = ["{user}", "{server}", "{membercount}"];
 
 /** Default welcome message used when a guild hasn't customized one. */
 export const DEFAULT_WELCOME_MESSAGE =
-  "Welcome to **{server}**, {user}! You are member **#{membercount}**. 🎉";
+  "Welcome {user} to **{server}** ✨\nYou just joined as member #{membercount}.\n\nHope you enjoy your stay here, make yourself at home!";

@@ -25,25 +25,17 @@ export async function sendLog(guild, embed) {
   await channel.send({ embeds: [embed] }).catch(() => {});
 }
 
-// ── Embed builders ────────────────────────────────────────────────────────────
-
 /** Message deleted */
 export function messageDeleteEmbed(message) {
   const embed = new EmbedBuilder()
     .setColor(0xed4245)
     .setAuthor({
-      name: message.author.username,
+      name: 'Message Deleted',
       iconURL: message.author.displayAvatarURL({ dynamic: true }),
     })
-    .setTitle("🗑️  Message Deleted")
-    .addFields(
-      { name: "Author", value: `${message.author} (${message.author.tag})`, inline: true },
-      { name: "Channel", value: `${message.channel}`, inline: true },
-      {
-        name: "Content",
-        value: message.content?.slice(0, 1024) || "*[no text content]*",
-      },
-    )
+    .setDescription(
+      `${message.author} has deleted the message on ${message.channel}\n\n` +
+      (message.content?.slice(0, 1024) || "*[no text content]*"))
     .setFooter({ text: `User ID: ${message.author.id}` })
     .setTimestamp();
 
@@ -62,13 +54,11 @@ export function messageUpdateEmbed(oldMessage, newMessage) {
   return new EmbedBuilder()
     .setColor(0xfee75c)
     .setAuthor({
-      name: newMessage.author.username,
+      name: 'Message Edited',
       iconURL: newMessage.author.displayAvatarURL({ dynamic: true }),
     })
-    .setTitle("✏️  Message Edited")
-    .setURL(newMessage.url)
+    .setDescription(`${newMessage.author} has edited the message in ${newMessage.channel}`)
     .addFields(
-      { name: "Channel", value: `${newMessage.channel}`, inline: true },
       {
         name: "Before",
         value: oldMessage.content?.slice(0, 1024) || "*[no text]*",
@@ -84,20 +74,27 @@ export function messageUpdateEmbed(oldMessage, newMessage) {
 
 /** Member joined */
 export function memberJoinEmbed(member) {
-  const accountAge = Math.floor(
-    (Date.now() - member.user.createdTimestamp) / 86_400_000,
-  );
+  const ms = Date.now() - member.user.createdTimestamp;
+  const days = Math.floor(ms / 86_400_000);
+  const years = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+  const remainingDays = days % 30;
+
+  const parts = [];
+  if (years > 0)         parts.push(`${years}year`);
+  if (months > 0)        parts.push(`${months}month`);
+  if (remainingDays > 0) parts.push(`${remainingDays}day`);
+  const accountAge = parts.length > 0 ? parts.join(" ") : "< 1 day";
+
   return new EmbedBuilder()
     .setColor(0x57f287)
     .setAuthor({
-      name: member.user.username,
+      name: "Member Joined",
       iconURL: member.user.displayAvatarURL({ dynamic: true }),
     })
-    .setTitle("📥  Member Joined")
+    .setDescription(`${member} (${member.user.tag}) joined the server`)
     .addFields(
-      { name: "User", value: `${member} (${member.user.tag})`, inline: true },
-      { name: "Account Age", value: `${accountAge} day(s)`, inline: true },
-      { name: "Member Count", value: `${member.guild.memberCount}`, inline: true },
+      { name: "Account Age", value: accountAge, inline: true },
     )
     .setFooter({ text: `User ID: ${member.id}` })
     .setTimestamp();
@@ -108,23 +105,10 @@ export function memberLeaveEmbed(member) {
   return new EmbedBuilder()
     .setColor(0xed4245)
     .setAuthor({
-      name: member.user.username,
+      name: 'Member Left',
       iconURL: member.user.displayAvatarURL({ dynamic: true }),
     })
-    .setTitle("📤  Member Left")
-    .addFields(
-      { name: "User", value: `${member.user.tag}`, inline: true },
-      { name: "Member Count", value: `${member.guild.memberCount}`, inline: true },
-      {
-        name: "Roles",
-        value:
-          member.roles.cache
-            .filter((r) => r.id !== member.guild.id)
-            .map((r) => r.toString())
-            .join(", ")
-            .slice(0, 1024) || "*none*",
-      },
-    )
+    .setDescription(`${member} (${member.user.tag}) left the server`)
     .setFooter({ text: `User ID: ${member.id}` })
     .setTimestamp();
 }
@@ -137,15 +121,15 @@ export function voiceStateEmbed(oldState, newState, member) {
   const newCh = newState.channel;
 
   if (!oldCh && newCh) {
-    title = "🔊  Joined Voice";
+    title = "Joined Voice";
     color = 0x57f287;
     description = `${member} joined **${newCh.name}**`;
   } else if (oldCh && !newCh) {
-    title = "🔇  Left Voice";
+    title = "Left Voice";
     color = 0xed4245;
     description = `${member} left **${oldCh.name}**`;
   } else if (oldCh && newCh && oldCh.id !== newCh.id) {
-    title = "🔄  Moved Voice Channel";
+    title = "Moved Voice Channel";
     color = 0xfee75c;
     description = `${member} moved from **${oldCh.name}** → **${newCh.name}**`;
   } else {
@@ -162,7 +146,7 @@ export function voiceStateEmbed(oldState, newState, member) {
       changes.push(newState.streaming ? "📡 Started streaming" : "📡 Stopped streaming");
 
     if (changes.length === 0) return null;
-    title = "🔊  Voice State Changed";
+    title = "Voice State Changed";
     color = 0x5865f2;
     description = `${member} in **${newCh?.name ?? oldCh?.name ?? "Unknown"}**\n${changes.join("\n")}`;
   }
@@ -170,10 +154,9 @@ export function voiceStateEmbed(oldState, newState, member) {
   return new EmbedBuilder()
     .setColor(color)
     .setAuthor({
-      name: member.user.username,
+      name: title,
       iconURL: member.user.displayAvatarURL({ dynamic: true }),
     })
-    .setTitle(title)
     .setDescription(description)
     .setFooter({ text: `User ID: ${member.id}` })
     .setTimestamp();

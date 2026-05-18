@@ -28,7 +28,7 @@ export function parseCommaSeparated(input) {
  */
 export function resolveWelcomeMessage(template, member) {
   return template
-    .replace(/{user}/gi, `<@${member.id}>`)
+    .replace(/{user}/gi, member.user.username)
     .replace(/{server}/gi, member.guild.name)
     .replace(/{membercount}/gi, String(member.guild.memberCount));
 }
